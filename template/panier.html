@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Panier & Commande</title>
+</head>
+<body>
+
+    <h1>Mon Panier</h1>
+    <a href="accueil.html">⬅ Retour à la boutique</a>
+    <hr>
+
+    <div class="zone-panier"></div>
+
+    <br>
+    <div class="total-panier" style="border-top: 2px solid #000; padding-top: 10px;">
+        <h3>Total : <span id="montant-total">0</span> F CFA</h3>
+        <button id="btn-vider" style="background-color: #ff4d4d; color: white; border: none; padding: 10px; cursor: pointer;">Vider le panier</button>
+    </div>
+
+    <hr style="margin-top: 30px;">
+
+    <div id="section-commande" style="margin-top: 20px; max-width: 400px;">
+        <h2>Valider ma commande</h2>
+        <form id="formulaire-commande">
+            <div style="margin-bottom: 10px;">
+                <label for="nom">Nom complet :</label><br>
+                <input type="text" id="nom" required style="width: 100%; padding: 8px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label for="telephone">Numéro de téléphone :</label><br>
+                <input type="tel" id="telephone" required style="width: 100%; padding: 8px;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label for="adresse">Adresse de livraison :</label><br>
+                <textarea id="adresse" required style="width: 100%; padding: 8px; height: 60px;"></textarea>
+            </div>
+            <button type="submit" style="background-color: #4CAF50; color: white; border: none; padding: 12px; width: 100%; font-size: 16px; cursor: pointer;">
+                Confirmer et Commander
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function afficherPanier() {
+            const panier = JSON.parse(localStorage.getItem('panier')) || [];
+            const zonePanier = document.querySelector('.zone-panier');
+            const montantTotalSpan = document.getElementById('montant-total');
+            const sectionCommande = document.getElementById('section-commande');
+            
+            zonePanier.innerHTML = "";
+            
+           
+            if (panier.length === 0) {
+                zonePanier.innerHTML = "<p>Votre panier est vide.</p>";
+                montantTotalSpan.innerText = "0";
+                sectionCommande.style.display = "none";
+                return;
+            }
+            
+            
+            sectionCommande.style.display = "block";
+            
+            let total = 0;
+            
+            panier.forEach((produit, index) => {
+                const ligne = document.createElement('div');
+                ligne.className = 'ligne-panier';
+                ligne.style.borderBottom = "1px solid #ccc";
+                ligne.style.padding = "10px 0";
+                ligne.style.display = "flex";
+                ligne.style.justifyContent = "space-between";
+                ligne.style.alignItems = "center";
+                
+                ligne.innerHTML = `
+                    <div>
+                        <strong>${produit.nom}</strong> - ${produit.prix} F CFA
+                    </div>
+                    <button onclick="retirerDuPanier(${index})" style="background-color: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer;">Supprimer</button>
+                `;
+                
+                zonePanier.appendChild(ligne);
+                total += parseFloat(produit.prix);
+            });
+            
+            montantTotalSpan.innerText = total;
+        }
+
+        function retirerDuPanier(index) {
+            let panier = JSON.parse(localStorage.getItem('panier')) || [];
+            panier.splice(index, 1);
+            localStorage.setItem('panier', JSON.stringify(panier));
+            afficherPanier();
+        }
+
+        document.getElementById('btn-vider').addEventListener('click', () => {
+            if (confirm("Voulez-vous vraiment vider tout votre panier ?")) {
+                localStorage.removeItem('panier');
+                afficherPanier();
+            }
+        });
+
+        
+        document.getElementById('formulaire-commande').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const panier = JSON.parse(localStorage.getItem('panier')) || [];
+            
+            const donneesCommande = {
+                nom_client: document.getElementById('nom').value,
+                telephone_client: document.getElementById('telephone').value,
+                adresse_livraison: document.getElementById('adresse').value,
+                articles: panier 
+            };
+
+            try {
+                
+                const reponse = await fetch('/api/creer-commande/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(donneesCommande)
+                });
+
+                if (reponse.ok) {
+                    alert("Commande enregistrée avec succès ! Merci pour votre achat.");
+                    localStorage.removeItem('panier'); 
+                    window.location.href = "index.html"; 
+                } else {
+                    alert("Une erreur est survenue lors de la validation de la commande.");
+                }
+            } catch (erreur) {
+                console.error("Erreur réseau :", erreur);
+                alert("Impossible de joindre le serveur.");
+            }
+        });
+
+        afficherPanier();
+    </script>
+</body>
+</html>

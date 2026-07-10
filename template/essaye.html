@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Aaa</title>
+</head>
+<body>
+
+    <h1>Bienvenue sur notre boutique </h1>
+    
+    <a href="panier.html" style="font-size: 18px; font-weight: bold;">Panier</a>
+    <hr>
+
+    <div class="zone-produits"></div>
+
+    <script>
+        async function chargerProduits() {
+            try {
+                
+                const reponse = await fetch('https://fakestoreapi.com/products?limit=6');
+                const produits = await reponse.json();
+                
+                const zoneProduits = document.querySelector('.zone-produits');
+                
+                if (produits.length === 0) {
+                    zoneProduits.innerHTML = "<p>Aucun produit n'est disponible pour le moment.</p>";
+                    return;
+                }
+
+               
+                produits.forEach(produit => {
+                    const carte = document.createElement('div');
+                    carte.className = 'carte-produit';
+                    carte.style.border = "1px solid #ddd";
+                    carte.style.margin = "10px";
+                    carte.style.padding = "15px";
+                    carte.style.display = "inline-block";
+                    carte.style.width = "200px";
+                    carte.style.verticalAlign = "top";
+                    
+                    
+                    carte.innerHTML = `
+                        <img src="${produit.image}" alt="${produit.title}" width="150" style="height: 150px; object-fit: contain;">
+                        <h3 style="font-size: 16px; height: 50px; overflow: hidden;">${produit.title}</h3>
+                        <p style="font-size: 12px; height: 40px; overflow: hidden;">${produit.description}</p>
+                        <p><strong>Prix : ${Math.round(produit.price * 650)} F CFA</strong></p>
+                        <button class="btn-ajouter">Ajouter au panier</button>
+                    `;
+                    
+                   
+                    const produitPourPanier = {
+                        id: produit.id,
+                        nom: produit.title,
+                        prix: Math.round(produit.price * 650),
+                        description: produit.description,
+                        image_url: produit.image
+                    };
+
+                    
+                    const bouton = carte.querySelector('.btn-ajouter');
+                    bouton.addEventListener('click', () => {
+                        ajouterAuPanier(produitPourPanier);
+                    });
+                    
+                    zoneProduits.appendChild(carte);
+                });
+            } catch (erreur) {
+                console.error("Erreur lors du chargement des produits :", erreur);
+                document.querySelector('.zone-produits').innerHTML = "<p>Erreur de connexion à l'API de test.</p>";
+            }
+        }
+
+        function ajouterAuPanier(produit) {
+            let panier = JSON.parse(localStorage.getItem('panier')) || [];
+            panier.push(produit);
+            localStorage.setItem('panier', JSON.stringify(panier));
+            alert(`${produit.nom} a bien été ajouté au panier !`);
+             
+        }
+
+        chargerProduits();
+    </script>
+</body>
+</html>
