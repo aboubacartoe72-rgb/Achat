@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <section class="classique">
+        <h1>Historique des pannes</h1>
+        <label for="url">Saisie le lien du site</label>
+        <input type="url" id="lien" placeholder="exemple.com">
+        <button id='cl'>Decission</button>
+        <div class="classique_pro">
+            <table class="carte_prob">
+                <thead>
+                    <tr>
+                       <th>Etat</th>
+                       <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="cart_item"></tbody>
+            </table>
+        </div>
+    </section>
+    <script>
+        const carte_prob=document.getElementsById('cart_item');
+        const voir=document.getElementById('cl');
+        
+        voir.addEventListener('click', async () =>{
+          const url=document.getElementById('lien').value;
+          try{
+            const reponse = await fetch(url, { method:'GET' });
+            if (reponse.ok) {
+             carte_prob.innerHTML = '<tr><td style="color:green">En ligne</td><td>Le site fonctionne correctement</td></tr>';
+            } else {
+              carte_prob.innerHTML = '<tr><td style="color:red">En panne</td><td>Le site ne répond pas (code ' + reponse.status + ')</td></tr>';
+            }
+          }catch(error){
+            carte_prob.innerHTML='<tr><td style="color:red">Erreur</td><td>Impossible de joindre le site</td></tr>';
+          }
+        })
+    </script>
+</body>
+</html>

@@ -16,7 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.shortcuts import render
+def page_essaye(request):
+    return render(request, 'essaye.html')
+
+def page_panier(request):
+    return render (request, 'panier.html')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('essaye/' , views.page_essaye, name='essaye'),
+    path('panier/' , views.page_panier, name='panier'),
 ]

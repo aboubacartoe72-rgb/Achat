@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalPing</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    .ok { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <section class="classique">
+    <h1>Historique des pannes</h1>
+    <label for="lien">Saisis le lien du site :</label>
+    <input type="url" id="lien" placeholder="https://exemple.com">
+    <button id="cl">Vérifier</button>
+
+    <div class="classique_pro">
+      <table class="carte_prob">
+        <thead>
+          <tr>
+            <th>État</th>
+            <th>Description</th>
+            <th>Solution proposée</th>
+          </tr>
+        </thead>
+        <tbody id="cart_item"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const voir = document.getElementById('cl');
+    const carte_prob = document.getElementById('cart_item');
+
+    voir.addEventListener('click', async () => {
+      const url = document.getElementById('lien').value;
+
+      try {
+        const reponse = await fetch(url, { method: 'GET' });
+        let newRow = "";
+
+        if (reponse.ok) {
+          newRow = `<tr>
+                      <td class="ok">En ligne</td>
+                      <td>Le site fonctionne correctement</td>
+                      <td>Aucune action nécessaire</td>
+                    </tr>`;
+        } else {
+          let description = "";
+          let solution = "";
+
+          switch (reponse.status) {
+            case 404:
+              description = "Page introuvable (URL incorrecte ou fichier supprimé)";
+              solution = "Vérifiez l’URL ou recréez la page manquante";
+              break;
+            case 500:
+              description = "Erreur interne du serveur";
+              solution = "Corrigez le bug côté serveur ou contactez votre développeur";
+              break;
+            case 503:
+              description = "Service indisponible (maintenance ou surcharge)";
+              solution = "Attendez la fin de la maintenance ou contactez l’hébergeur";
+              break;
+            default:
+              description = "Le site a répondu avec le code " + reponse.status;
+              solution = "Consultez la documentation de votre hébergeur";
+          }
+
+          newRow = `<tr>
+                      <td class="error">En panne</td>
+                      <td>${description}</td>
+                      <td>${solution}</td>
+                    </tr>`;
+        }
+
+        carte_prob.innerHTML += newRow;
+      } catch (error) {
+        carte_prob.innerHTML += `<tr>
+                                   <td class="error">Erreur</td>
+                                   <td>Impossible de joindre le site (DNS ou serveur hors ligne)</td>
+                                   <td>Vérifiez que le domaine existe et que le serveur est allumé</td>
+                                 </tr>`;
+      }
+    });
+  </script>
+</body>
+</html>

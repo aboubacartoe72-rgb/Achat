@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalPing - Surveillance</title>
+    <style>
+        /* Quelques styles rapides pour visualiser les couleurs */
+        .en-ligne { color: green; font-weight: bold; }
+        .en-panne { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <section class="classique">
+        <h1>Historique des pannes</h1>
+        
+        <label for="lien">Saisir le lien du site</label>
+        <input type="url" id="lien" placeholder="https://exemple.com">
+        <button id="cl">Décision</button>
+        
+        <div class="classique_pro">
+            <table class="carte_prob">
+                <tbody id="cart_item"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <script>
+        // 1. Sélection des éléments du DOM
+        const boutonVoir = document.getElementById('cl');
+        const tableauCorps = document.getElementById('cart_item');
+        const inputLien = document.getElementById('lien');
+
+        // 2. Écouteur d'événement sur le bouton
+        boutonVoir.addEventListener('click', async () => {
+            const urlSaisie = inputLien.value.trim();
+
+            if (!urlSaisie) {
+                alert("Veuillez saisir une URL valide !");
+                return;
+            }
+
+            // On vide le tableau avant de faire la recherche
+            tableauCorps.innerHTML = '<tr><td colspan="2">Chargement...</td></tr>';
+
+            try {
+                // 3. Appel à ton futur backend (remplace l'URL par celle de ton API locale, ex: http://localhost:3000/api/pannes)
+                // On passe l'URL saisie en paramètre
+                const reponse = await fetch(`/api/pannes?url=${encodeURIComponent(urlSaisie)}`);
+                const pannes = await reponse.json(); // On attend un tableau d'objets [{etat: "En panne", description: "Serveur injoignable le..."}]
+
+                // On vide le message de chargement
+                tableauCorps.innerHTML = '';
+
+                // 4. Logique d'affichage
+                if (pannes.length === 0) {
+                    // Si aucune panne n'est enregistrée
+                    tableauCorps.innerHTML = `
+                        <tr>
+                            <td class="en-ligne">En ligne</td>
+                            <td>Le site fonctionne très bien. Aucune panne détectée.</td>
+                        </tr>
+                    `;
+                } else {
+                    // Si on a des pannes, on boucle dessus pour créer des lignes de tableau
+                    pannes.forEach(panne => {
+                        const ligne = document.createElement('tr');
+                        ligne.innerHTML = `
+                            <td class="en-panne">Hors ligne</td>
+                            <td>Panne détectée le : ${panne.date || 'Date inconnue'} (Code : ${panne.code_erreur || '500'})</td>
+                        `;
+                        tableauCorps.appendChild(ligne);
+                    });
+                }
+
+            } catch (erreur) {
+                console.error("Erreur lors de la récupération des données :", erreur);
+                tableauCorps.innerHTML = '<tr><td colspan="2" style="color:red;">Impossible de contacter le serveur.</td></tr>';
+            }
+        });
+    </script>
+</body>
+</html>
